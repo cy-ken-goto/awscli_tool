@@ -24,7 +24,7 @@ end
 def get_volume_id(volume_id)
     result = JSON.parse(exec_command("aws ec2 describe-volumes --volume-ids " + volume_id))
     return {
-                "Size"=>result["Volumes"][0]["Size"] 
+                "size"=>result["Volumes"][0]["Size"] 
             }
 end
 
@@ -85,7 +85,7 @@ def check_pend(id, check_state, time=3)
         elsif id_type[0] == "vol" then
             current_state = get_volume_state(id)
         end
-        puts ". (" + id + " is " + current_state + ")"
+        puts "."
     end
     print(current_state + "\n")
 end
@@ -113,13 +113,21 @@ print("EC2インスタンスのidを入力して下さい : ")
 input_id = STDIN.gets
 print("対象サーバにrootログイン可能な秘密鍵を絶対パス指定して下さい : ")
 key_file = STDIN.gets
-print("変更後のVolumeのサイズを入力して下さい(GB) : ")
-input_size = STDIN.gets
 input_id.chomp!
 key_file.chomp!
-input_size.chomp!
 
 instance_data = get_instance_data(input_id)
+volume_data = get_volume_id(instance_data["volume_id"])
+print("現在のVolumeSize : " + volume_data["size"].to_s + "GB\n")
+print("変更後のVolumeのサイズを入力して下さい(GB) : ")
+input_size = STDIN.gets
+input_size.chomp!
+
+if input_size.to_i <= volume_data["size"] then
+    print("サイズを下げることは出来ません\n")
+    exit(0)
+end
+
 ssh_str = "ssh -i " + key_file + " root@" + instance_data["private_ip"] + " "
 # チェック用ファイル作成
 exec_command(ssh_str + "touch ssh_chk.txt");
