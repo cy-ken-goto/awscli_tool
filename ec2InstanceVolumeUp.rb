@@ -192,6 +192,7 @@ puts "新規Volume attach完了 : " + new_volume_id
 # Instanceスタート
 start_instance(input_id)
 
+old_volume_id = instance_data["volume_id"]
 instance_data = get_instance_data(input_id)
 ssh_str = "ssh "
 if key_flg then
@@ -212,12 +213,12 @@ if response != "cat: ssh_chk.txt: No such file or directory" then
 
     if input("作成したSnapShotを削除しますか？(y/n) : ") == "y" then
         if delete_snapshot(new_snapshot_id) then
-            puts new_snapshot_id + "削除完了"
+            puts new_snapshot_id + " 削除完了"
         end
     end
     if input("dettachされたVolumeを削除しますか？(y/n) : ") == "y" then
-        if delete_volume(instance_data["volume_id"]) then
-            puts instance_data["volume_id"] + "削除完了"
+        if delete_volume(old_volume_id) then
+            puts instance_data["volume_id"] + " 削除完了"
         end
     end
 
