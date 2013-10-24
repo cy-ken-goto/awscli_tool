@@ -65,6 +65,8 @@ input_id = 'i-650ab460'
 print("対象サーバにrootログイン可能な秘密鍵を絶対パス指定して下さい : ")
 #key_file = STDIN.gets
 key_file = '~/.ssh/goto_key.pem'
+print("変更後のVolumeのサイズを入力して下さい(GB) : ")
+change_volume_size = STDIN.gets
 
 pip = get_instance_private_ip(input_id)
 ssh_str = "ssh -i " + key_file + " root@" + pip + " "
