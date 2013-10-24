@@ -11,9 +11,10 @@ end
 # Instance グローバルIPを取得
 def get_instance_data(instance_id)
     result = JSON.parse(`#{"aws ec2 describe-instances --instance-ids " + instance_id}`)
-    rtn["private_ip"] = result["Reservations"][0]["Instances"][0]["PrivateIpAddress"]
-    rtn["availability_zone"] = result["Reservations"][0]["Instances"][0]["Placement"]["AvailabilityZone"]
-    return rtn
+    return {
+                "private_ip"=>result["Reservations"][0]["Instances"][0]["PrivateIpAddress"], 
+                "availability_zone"=>result["Reservations"][0]["Instances"][0]["Placement"]["AvailabilityZone"]
+            }
 end
 
 # volume idを取得
@@ -28,7 +29,7 @@ def create_snapshot(volume_id)
 end
 
 def create_volume(snapshot_id, size, availability_zone)
-    result = JSON.parse(`#{"aws ec2 create-snapshot --snapshot-id " + snapshot_id + " --size " + size + " --availability-zone " + availability_zone}`)
+    result = JSON.parse(`#{"aws ec2 create-volume --snapshot-id " + snapshot_id + " --size " + size + " --availability-zone " + availability_zone}`)
     return result["VolumeId"]
 end
 
