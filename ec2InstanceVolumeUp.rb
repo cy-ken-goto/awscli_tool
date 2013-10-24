@@ -108,27 +108,54 @@ def get_volume_state(volume_id)
     return result["Volumes"][0]["State"]
 end
 
+def input(print_str)
+    input = ""
+    while input == ""
+        print(print_str)
+        input = STDIN.gets
+        input.chomp!
+    end
+    return input
+end
+
 # id受取
-print("EC2インスタンスのidを入力して下さい : ")
-input_id = STDIN.gets
-print("対象サーバにrootログイン可能な秘密鍵を絶対パス指定して下さい : ")
-key_file = STDIN.gets
-input_id.chomp!
-key_file.chomp!
+input_id = input("EC2インスタンスのidを入力して下さい : ")
 
 instance_data = get_instance_data(input_id)
+
+input_user_name = input("対象サーバのユーザ名を指定してください(rootでない場合はsudo可能であること) : ")
+root_user_flg = false
+if input_user_name == "root"
+    root_user_flg = true
+end
+
+input_key_flg = input("対象サーバへのsshログインで鍵指定は必要ですか？(y/n) : ")
+if input_key_flg == "y" then
+    key_flg = true
+else
+    key_flg = false
+end
+
+if key_flg then
+    key_file = input("rootログイン可能な秘密鍵を絶対パスで指定して下さい : ")
+    ssh_str = "ssh -i " + key_file + " " + input_user_name + "@" + instance_data["private_ip"] + " "
+else
+    ssh_str = "ssh " + input_user_name + "@" + instance_data["private_ip"] + " "
+end
+if !root_user_flg then
+    ssh_str += "sudo "
+end
+
 volume_data = get_volume_id(instance_data["volume_id"])
+
 print("現在のVolumeSize : " + volume_data["size"].to_s + "GB\n")
-print("変更後のVolumeのサイズを入力して下さい(GB) : ")
-input_size = STDIN.gets
-input_size.chomp!
+input_size = input("変更後のVolumeのサイズを入力して下さい(GB) : ")
 
 if input_size.to_i <= volume_data["size"] then
     print("サイズを下げることは出来ません\n")
     exit(0)
 end
 
-ssh_str = "ssh -i " + key_file + " root@" + instance_data["private_ip"] + " "
 # チェック用ファイル作成
 exec_command(ssh_str + "touch ssh_chk.txt");
 
