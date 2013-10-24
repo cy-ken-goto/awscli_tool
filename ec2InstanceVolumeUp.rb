@@ -40,6 +40,18 @@ def create_volume(snapshot_id, size, availability_zone)
     return result["VolumeId"]
 end
 
+def delete_snapshot(snapshot_id)
+    result = JSON.parse(exec_command("aws ec2 delete-snapshot --snapshot-id " + snapshot_id))
+    result["return"].class
+    return result["return"]
+end
+
+def delete_volume(volume_id)
+    result = JSON.parse(exec_command("aws ec2 delete-volume --volume-id " + volume_id))
+    result["return"].class
+    return result["return"]
+end
+
 # ec2インスタンスをstart
 def start_instance(instance_id)
     if get_instance_state(instance_id) != "running" then
@@ -136,12 +148,12 @@ else
     key_flg = false
 end
 
+ssh_str = "ssh "
 if key_flg then
     key_file = input("rootログイン可能な秘密鍵を絶対パスで指定して下さい : ")
-    ssh_str = "ssh -i " + key_file + " " + input_user_name + "@" + instance_data["private_ip"] + " "
-else
-    ssh_str = "ssh " + input_user_name + "@" + instance_data["private_ip"] + " "
+    ssh_str += "-i " + key_file + " "
 end
+ssh_str += input_user_name + "@" + instance_data["private_ip"] + " "
 if !root_user_flg then
     ssh_str += "sudo "
 end
@@ -180,6 +192,16 @@ puts "新規Volume attach完了 : " + new_volume_id
 # Instanceスタート
 start_instance(input_id)
 
+instance_data = get_instance_data(input_id)
+ssh_str = "ssh "
+if key_flg then
+    ssh_str += "-i " + key_file + " "
+end
+ssh_str += input_user_name + "@" + instance_data["private_ip"] + " "
+if !root_user_flg then
+    ssh_str += "sudo "
+end
+
 # リサイズ
 exec_command(ssh_str + "resize2fs " + device_pos)
 
@@ -187,6 +209,18 @@ exec_command(ssh_str + "resize2fs " + device_pos)
 response = exec_command(ssh_str + "cat ssh_chk.txt")
 if response != "cat: ssh_chk.txt: No such file or directory" then
     exec_command(ssh_str + "rm -f ssh_chk.txt")
+
+    if input("作成したSnapShotを削除しますか？(y/n) : ") == "y" then
+        if delete_snapshot(new_snapshot_id) then
+            puts new_snapshot_id + "削除完了"
+        end
+    end
+    if input("dettachされたVolumeを削除しますか？(y/n) : ") == "y" then
+        if delete_volume(instance_data["volume_id"]) then
+            puts instance_data["volume_id"] + "削除完了"
+        end
+    end
+
     puts "Finish!!"
 else
     puts "Error!!"
