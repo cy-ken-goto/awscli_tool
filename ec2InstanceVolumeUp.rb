@@ -29,6 +29,7 @@ end
 
 def create_volume(snapshot_id, size, availability_zone)
     result = JSON.parse(`#{"aws ec2 create-snapshot --snapshot-id " + snapshot_id + " --size " + size + " --availability-zone " + availability_zone}`)
+    return result["VolumeId"]
 end
 
 # ec2インスタンスをstart
@@ -68,7 +69,7 @@ print("対象サーバにrootログイン可能な秘密鍵を絶対パス指定
 #key_file = STDIN.gets
 key_file = '~/.ssh/goto_key.pem'
 print("変更後のVolumeのサイズを入力して下さい(GB) : ")
-change_volume_size = STDIN.gets
+input_size = STDIN.gets
 
 instance_data = get_instance_data(input_id)
 ssh_str = "ssh -i " + key_file + " root@" + instance_data["private_ip"] + " "
@@ -83,9 +84,10 @@ stop_instance(input_id)
 
 old_volume_id = get_volume_id(input_id)
 puts "VolumeIdを取得 : " + old_volume_id
-snapshot_id = create_snapshot(old_volume_id)
-puts "Snapshotを作成 : " + snapshot_id
-
+new_snapshot_id = create_snapshot(old_volume_id)
+puts "Snapshotを作成 : " + new_snapshot_id
+new_volume_id = create_volume(new_snapshot_id, input_size, instance_data["availability_zone"])
+puts "新しいVolumeを作成 : " + new_volume_id
 
 # Instanceスタート
 start_instance(input_id)
