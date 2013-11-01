@@ -1,31 +1,87 @@
 #!/bin/env ruby
 require 'aws_include.rb'
 
-# id受取
-input_id = input("EC2インスタンスのidを入力して下さい : ")
+# コマンドライン引数受取
+require 'optparse'
 
+# デフォルト値を設定する
+config = {
+    :user => 'root',
+}
+
+# 引数を解析する
+OptionParser.new do |opts|
+    begin
+        # オプション情報を設定する
+        opts = OptionParser.new
+        opts.on('-i instance_id',
+                '--instance-id instance_id',
+                "EC2のInstance Idを指定") { 
+            |v| config[:instance_id] = v 
+        }
+        opts.on('-s size',
+                '--size size',
+                "変更後のEBS容量を指定(GB)") {
+            |v| config[:size] = v
+        }
+        opts.on('-u user',
+                '--user user',
+                "対象サーバへのログインユーザを指定（デフォルト値：#{config[:user]}）※ユーザ指定する場合sudo可能であること") {
+            |v| config[:arg3] = v
+        }
+        opts.on('-k key',
+                '--key key',
+                "対象サーバへのログイン鍵を指定（デフォルト値：なし）") {
+            |v| config[:key] = v
+        }
+
+        opts.parse!(ARGV)
+
+    rescue => e
+        puts opts.help
+        puts
+        puts e.message
+        exit 1
+    end
+end
+
+# 引数受取
+key_flg = false
+root_user_flg = true
+if !config[:instance_id].nil? then
+    input_id = config[:instance_id]
+else
+    input_id = input("EC2インスタンスのidを入力して下さい : ")
+end
+if !config[:size].nil? then
+    input_size = config[:size]
+else
+    input_size = input("変更後のVolumeのサイズを入力して下さい(GB) : ")
+end
+input_user_name = config[:user]
+if input_user_name != "root"
+    root_user_flg = false
+end
+if !config[:key].nil? then
+    key_file = config[:key]
+    key_flg = true
+end
+
+print(input_id)
+print(input_size)
+print(input_user_name)
+
+# インスタンスがStop中の場合Startする
 if get_instance_state(input_id) != "running" then
     start_instance(input_id)
 end
 
+# インスタンスの情報取得
 instance_data = get_instance_data(input_id)
 
-input_user_name = input("対象サーバのユーザ名を指定してください(rootでない場合はsudo可能であること) : ")
-root_user_flg = false
-if input_user_name == "root"
-    root_user_flg = true
-end
-
-input_key_flg = input("対象サーバへのsshログインで鍵指定は必要ですか？(y/n) : ")
-if input_key_flg == "y" then
-    key_flg = true
-else
-    key_flg = false
-end
-
-ssh_str = "ssh "
+# sshコマンドの実行準備
+ssh_str = "ssh -o \"StrictHostKeyChecking no\" "
 if key_flg then
-    key_file = input("rootログイン可能な秘密鍵を絶対パスで指定して下さい : ")
     ssh_str += "-i " + key_file + " "
 end
 ssh_str += input_user_name + "@" + instance_data["private_ip"] + " "
@@ -33,11 +89,9 @@ if !root_user_flg then
     ssh_str += "sudo "
 end
 
+# 現在のvolumeサイズと比較チェック
 volume_data = get_volume_id(instance_data["volume_id"])
-
 print("現在のVolumeSize : " + volume_data["size"].to_s + "GB\n")
-input_size = input("変更後のVolumeのサイズを入力して下さい(GB) : ")
-
 if input_size.to_i <= volume_data["size"] then
     print("サイズを下げることは出来ません\n")
     exit(0)
@@ -68,8 +122,10 @@ puts "新規Volume attach完了 : " + new_volume_id
 start_instance(input_id)
 
 old_volume_id = instance_data["volume_id"]
+
+# 再起動しているためもう一度インスタンス情報
 instance_data = get_instance_data(input_id)
-ssh_str = "ssh "
+ssh_str = "ssh -o \"StrictHostKeyChecking no\" "
 if key_flg then
     ssh_str += "-i " + key_file + " "
 end
