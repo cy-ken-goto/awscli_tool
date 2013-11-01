@@ -67,10 +67,6 @@ if !config[:key].nil? then
     key_flg = true
 end
 
-print(input_id)
-print(input_size)
-print(input_user_name)
-
 # インスタンスがStop中の場合Startする
 if get_instance_state(input_id) != "running" then
     start_instance(input_id)
