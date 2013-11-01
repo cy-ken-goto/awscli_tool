@@ -72,6 +72,9 @@ if get_instance_state(input_id) != "running" then
     start_instance(input_id)
 end
 
+# 各デーモンの起動を5秒待つ
+sleep(5)
+
 # インスタンスの情報取得
 instance_data = get_instance_data(input_id)
 
@@ -117,6 +120,8 @@ puts "新規Volume attach完了 : " + new_volume_id
 
 # Instanceスタート
 start_instance(input_id)
+# 各デーモンの起動を5秒待つ
+sleep(5)
 
 old_volume_id = instance_data["volume_id"]
 
