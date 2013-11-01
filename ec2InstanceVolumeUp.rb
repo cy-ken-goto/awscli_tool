@@ -106,7 +106,8 @@ device_pos = exec_command(ssh_str + "df -x tmpfs | grep / | cut -d' ' -f1")
 # Instanceストップ
 stop_instance(input_id)
 
-new_snapshot_id = create_snapshot(instance_data["volume_id"])
+description = "ec2InstanceVolumeUp"
+new_snapshot_id = create_snapshot(instance_data["volume_id"], input_id,"ec2InstanceVolumeUp")
 puts "Snapshot作成完了 : " + new_snapshot_id
 
 new_volume_id = create_volume(new_snapshot_id, input_size, instance_data["availability_zone"])

@@ -28,8 +28,14 @@ def get_volume_id(volume_id)
             }
 end
 
-def create_snapshot(volume_id)
-    result = JSON.parse(exec_command("aws ec2 create-snapshot --volume-id " + volume_id))
+def create_snapshot(volume_id, instance_id=nil, description="")
+    if !instance_id.nil? then
+        description += " Created by " + instance_id
+    else
+        description += " Created by " + volume_id
+    end
+    description = " \""+ Time.now.strftime("[%Y-%m-%d %H:%M:%S]") + description + "\""
+    result = JSON.parse(exec_command("aws ec2 create-snapshot --volume-id " + volume_id + " --description" + description))
     check_pend(result["SnapshotId"], "completed", 5)
     return result["SnapshotId"]
 end
