@@ -1,3 +1,4 @@
+#!/bin/env ruby
 require 'rubygems'
 require 'json'
 require 'pp'
@@ -132,6 +133,10 @@ end
 
 # id受取
 input_id = input("EC2インスタンスのidを入力して下さい : ")
+
+if get_instance_state(input_id) != "running" then
+    start_instance(input_id)
+end
 
 instance_data = get_instance_data(input_id)
 
