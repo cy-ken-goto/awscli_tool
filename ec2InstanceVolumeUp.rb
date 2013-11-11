@@ -41,7 +41,7 @@ OptionParser.new do |opts|
         puts opts.help
         puts
         puts e.message
-        exit 1
+        exit(1)
     end
 end
 
@@ -72,9 +72,6 @@ if get_instance_state(input_id) != "running" then
     start_instance(input_id)
 end
 
-# 各デーモンの起動を5秒待つ
-sleep(5)
-
 # インスタンスの情報取得
 instance_data = get_instance_data(input_id)
 
@@ -93,7 +90,7 @@ volume_data = get_volume_id(instance_data["volume_id"])
 print("現在のVolumeSize : " + volume_data["size"].to_s + "GB\n")
 if input_size.to_i <= volume_data["size"] then
     print("サイズを下げることは出来ません\n")
-    exit(0)
+    exit(1)
 end
 
 # チェック用ファイル作成
@@ -120,8 +117,6 @@ puts "新規Volume attach完了 : " + new_volume_id
 
 # Instanceスタート
 start_instance(input_id)
-# 各デーモンの起動を5秒待つ
-sleep(5)
 
 old_volume_id = instance_data["volume_id"]
 
@@ -148,7 +143,9 @@ if response != "cat: ssh_chk.txt: No such file or directory" then
     end
 
     puts "Finish!!"
+    exit(0)
 else
     puts "Error!!"
+    exit(1)
 end
 

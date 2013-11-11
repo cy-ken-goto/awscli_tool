@@ -64,6 +64,8 @@ def start_instance(instance_id)
         puts "instance starting\n"
         result = JSON.parse(exec_command("aws ec2 start-instances --instance-ids " + instance_id))
         check_pend(instance_id, "running")
+        # 各デーモンの起動を5秒待つ
+        sleep(5)
     end
 end
 
