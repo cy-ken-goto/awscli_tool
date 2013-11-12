@@ -35,6 +35,20 @@ def get_volume_id(volume_id)
             }
 end
 
+def create_image(instance_id, reboot=true, name="") {
+    name += Time.now.strftime("[%Y-%m-%d %H:%M:%S]") + description
+    name += "Created by " + instance_id
+    cmd = "aws ec2 create-image --instance-id " + instance_id
+    cmd += " --name " + name
+    if reboot then
+        cmd += " --reboot"
+    else
+        cmd += " --no-reboot"
+    end
+    result = JSON.parse(exec_command(cmd)
+    return result
+}
+
 def create_snapshot(volume_id, instance_id=nil, description="")
     if !instance_id.nil? then
         description += " Created by " + instance_id

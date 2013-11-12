@@ -4,6 +4,10 @@ require 'aws_include.rb'
 # コマンドライン引数受取
 require 'optparse'
 
+# デフォルト値を設定する
+config = {
+}
+
 # 引数を解析する
 OptionParser.new do |opts|
     begin
@@ -35,7 +39,9 @@ if !config[:instance_id].nil? then
 elsif !config[:name].nil? then
     input_instance_id = get_instance_id(config[:name])
 else
-    input_id = input("クローン元のEC2インスタンスのidを入力して下さい : ")
+    input_instance_id  = input("クローン元のEC2インスタンスのidを入力して下さい : ")
 end
+
+pp create_image(input_instance_id)
 
 
