@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'json'
 require 'pp'
+require "open3"
 
 # コマンド実行
 def exec_command(cmd, put_flg=true)
@@ -8,7 +9,14 @@ def exec_command(cmd, put_flg=true)
     if put_flg then
         puts cmd
     end
-    return `#{cmd}`
+
+    stdout = `#{cmd}`
+    ret = $?
+    if ret != 0 then
+        puts "[failed command] #{cmd}"
+        exit(1)
+    end
+    return stdout
 end
 
 def get_instance_id(name)
@@ -36,9 +44,9 @@ def get_volume_id(volume_id)
             }
 end
 
-def create_instance(ami_id) {
+def create_instance(ami_id)
 
-}
+end
 
 def create_image(instance_id, reboot=true)
     name = " \"" + Time.now.strftime("%Y%m%d%H%M%S_")
