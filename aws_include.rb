@@ -16,7 +16,7 @@ def exec_command(cmd, put_flg=true)
         puts "[failed command] #{cmd}"
         exit(1)
     end
-    return stdout
+    return stdout.gsub(/[\r\n]/,"")
 end
 
 def get_instance_id(name)
@@ -46,6 +46,25 @@ end
 
 def create_instance(ami_id)
 
+end
+
+def check_load_balancer(instance_id)
+    cmd = "aws elb describe-load-balancers"
+    cmd += " | jq '.[\"LoadBalancerDescriptions\"]'"
+    load_balancers = JSON.parse(exec_command(cmd, put_flg=true))
+    i = 0
+    while i < load_balancers.length
+        instances = load_balancers[i]["Instances"]
+        j = 0
+        while j < instances.length
+            if instance_id == instances[j]["InstanceId"] then
+                return false
+            end
+            j = j + 1
+        end
+        i = i + 1
+    end
+    return true
 end
 
 def create_image(instance_id, reboot=true)

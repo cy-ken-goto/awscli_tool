@@ -42,6 +42,8 @@ else
     input_instance_id  = input("クローン元のEC2インスタンスのidを入力して下さい : ")
 end
 
+check_load_balancer(input_instance_id)
+
 ami_id = create_image(input_instance_id)
 puts "AMI作成完了 : " + ami_id
 
