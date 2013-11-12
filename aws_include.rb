@@ -4,6 +4,7 @@ require 'pp'
 
 # コマンド実行
 def exec_command(cmd, put_flg=true)
+    cmd = cmd.gsub(/[\r\n]/,"")
     if put_flg then
         puts cmd
     end
@@ -35,9 +36,9 @@ def get_volume_id(volume_id)
             }
 end
 
-def create_image(instance_id, reboot=true, name="") {
-    name += Time.now.strftime("[%Y-%m-%d %H:%M:%S]") + description
-    name += "Created by " + instance_id
+def create_image(instance_id, reboot=true)
+    name = " \"" + Time.now.strftime("%Y%m%d%H%M%S_")
+    name += "Created by " + instance_id + "\""
     cmd = "aws ec2 create-image --instance-id " + instance_id
     cmd += " --name " + name
     if reboot then
@@ -45,9 +46,9 @@ def create_image(instance_id, reboot=true, name="") {
     else
         cmd += " --no-reboot"
     end
-    result = JSON.parse(exec_command(cmd)
+    result = JSON.parse(exec_command(cmd))
     return result
-}
+end
 
 def create_snapshot(volume_id, instance_id=nil, description="")
     if !instance_id.nil? then
@@ -55,7 +56,7 @@ def create_snapshot(volume_id, instance_id=nil, description="")
     else
         description += " Created by " + volume_id
     end
-    description = " \""+ Time.now.strftime("[%Y-%m-%d %H:%M:%S]") + description + "\""
+    description = " \""+ Time.now.strftime("%Y%m%d%H%M%S_") + description + "\""
     result = JSON.parse(exec_command("aws ec2 create-snapshot --volume-id " + volume_id + " --description" + description))
     check_pend(result["SnapshotId"], "completed", 5)
     return result["SnapshotId"]
