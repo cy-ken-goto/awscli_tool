@@ -36,6 +36,10 @@ def get_volume_id(volume_id)
             }
 end
 
+def create_instance(ami_id) {
+
+}
+
 def create_image(instance_id, reboot=true)
     name = " \"" + Time.now.strftime("%Y%m%d%H%M%S_")
     name += "Created by " + instance_id + "\""
@@ -48,7 +52,7 @@ def create_image(instance_id, reboot=true)
     end
     result = JSON.parse(exec_command(cmd))
     check_pend(result["ImageId"], "available", 5)
-    return result
+    return result["ImageId"]
 end
 
 def create_snapshot(volume_id, instance_id=nil, description="")
