@@ -11,13 +11,10 @@ def exec_command(cmd, put_flg=true)
 end
 
 def get_instance_id(name)
-    result = JSON.parse(exec_command("aws ec2 describe-instances | jq '.[\"Reservations\"]")
-    countInstances = result.length
-    i = 0
-    while i = 6
-        result[i]
-        i++
-    end
+    cmd = "aws ec2 describe-instances --filter Name=tag:Name,Values=" + name
+    cmd += " | jq '.[\"Reservations\"][0][\"Instances\"][0][\"InstanceId\"]'"
+    cmd += " | sed -e 's/\"//g'"
+    return exec_command(cmd)
 end
 
 # Instance 各データを取得
