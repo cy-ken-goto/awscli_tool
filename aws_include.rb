@@ -47,6 +47,7 @@ def create_image(instance_id, reboot=true)
         cmd += " --no-reboot"
     end
     result = JSON.parse(exec_command(cmd))
+    check_pend(result["ImageId"], "available", 5)
     return result
 end
 
@@ -117,17 +118,20 @@ def check_pend(id, check_state, time=3)
     current_state = ""
     id_type = id.split("-")
     while current_state != check_state
-        sleep time
+        print "."
+        STDOUT.flush
         if id_type[0] == "i" then
             current_state = get_instance_state(id)
         elsif id_type[0] == "snap" then
             current_state = get_snapshot_state(id)
         elsif id_type[0] == "vol" then
             current_state = get_volume_state(id)
+        elsif id_type[0] == "ami" then
+            current_state = get_ami_state(id)
         end
-        puts "."
+        sleep time
     end
-    print(current_state + "\n")
+    puts(current_state)
 end
 
 # Instance Stateを取得
@@ -144,8 +148,14 @@ end
 
 # Volume Stateを取得
 def get_volume_state(volume_id)
-    result = JSON.parse(exec_command("aws ec2 describe-volumes --volume-ids " + volume_id))
+    result = JSON.parse(exec_command("aws ec2 describe-volumes --volume-ids " + volume_id, false))
     return result["Volumes"][0]["State"]
+end
+
+# AMI Stateを取得
+def get_ami_state(ami_id)
+    result = JSON.parse(exec_command("aws ec2 describe-images --image-ids  " + ami_id, false))
+    return result["Images"][0]["State"]
 end
 
 def input(print_str)
