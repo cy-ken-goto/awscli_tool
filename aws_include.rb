@@ -59,7 +59,7 @@ def create_image(instance_id, reboot=true)
         cmd += " --no-reboot"
     end
     result = JSON.parse(exec_command(cmd))
-    check_pend(result["ImageId"], "available", 5)
+    check_pend(result["ImageId"], "available", 3)
     return result["ImageId"]
 end
 
@@ -71,13 +71,13 @@ def create_snapshot(volume_id, instance_id=nil, description="")
     end
     description = " \""+ Time.now.strftime("%Y%m%d%H%M%S_") + description + "\""
     result = JSON.parse(exec_command("aws ec2 create-snapshot --volume-id " + volume_id + " --description" + description))
-    check_pend(result["SnapshotId"], "completed", 5)
+    check_pend(result["SnapshotId"], "completed", 3)
     return result["SnapshotId"]
 end
 
 def create_volume(snapshot_id, size, availability_zone)
     result = JSON.parse(exec_command("aws ec2 create-volume --snapshot-id " + snapshot_id + " --size " + size + " --availability-zone " + availability_zone))
-    check_pend(result["VolumeId"], "available", 5)
+    check_pend(result["VolumeId"], "available", 3)
     return result["VolumeId"]
 end
 
@@ -126,7 +126,7 @@ def attach_volume(volume_id, instance_id, device_name)
 end
 
 # penddingチェックメソッド
-def check_pend(id, check_state, time=3)
+def check_pend(id, check_state, time=2)
     current_state = ""
     id_type = id.split("-")
     while current_state != check_state
