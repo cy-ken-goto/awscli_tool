@@ -33,7 +33,11 @@ def get_instance_data(instance_id)
                 "private_ip"=>result["Reservations"][0]["Instances"][0]["PrivateIpAddress"], 
                 "availability_zone"=>result["Reservations"][0]["Instances"][0]["Placement"]["AvailabilityZone"],
                 "volume_id"=>result["Reservations"][0]["Instances"][0]["BlockDeviceMappings"][0]["Ebs"]["VolumeId"],
-                "device_name"=>result["Reservations"][0]["Instances"][0]["BlockDeviceMappings"][0]["DeviceName"]
+                "device_name"=>result["Reservations"][0]["Instances"][0]["BlockDeviceMappings"][0]["DeviceName"],
+                "key_name"=>result["Reservations"][0]["Instances"][0]["KeyName"],
+                "security_groups"=>result["Reservations"][0]["Instances"][0]["SecurityGroups"],
+                "instance_type"=>result["Reservations"][0]["Instances"][0]["InstanceType"],
+                "availability_zone"=>result["Reservations"][0]["Instances"][0]["Placement"]["AvailabilityZone"],
             }
 end
 
@@ -44,8 +48,20 @@ def get_volume_id(volume_id)
             }
 end
 
-def create_instance(ami_id)
+def create_instance(ami_id, instance_data)
+    i = 0
+    security_group_ids = ""
+    while i < instance_data["security_groups"].length
+        security_group_ids += instance_data["security_groups"][i]["GroupId"] + " "
+        i = i + 1
+    end
+    cmd ="aws ec2 run-instances --image-id " + ami_id
+    cmd += " --key-name " + instance_data["key_name"]
+    cmd += " --security-group-ids " + security_group_ids
+    cmd += " --instance-type " + instance_data["instance_type"]
+    cmd += " --placement AvailabilityZone=" + instance_data["availability_zone"]
 
+    return JSON.parse(exec_command(cmd))
 end
 
 def check_load_balancer(instance_id)
@@ -58,12 +74,26 @@ def check_load_balancer(instance_id)
         j = 0
         while j < instances.length
             if instance_id == instances[j]["InstanceId"] then
-                return false
+                return load_balancers[i]["LoadBalancerName"]
             end
             j = j + 1
         end
         i = i + 1
     end
+    return false
+end
+
+def deregister_instance_from_load_balancer(load_balancer_name, instance_id)
+    cmd = "aws elb deregister-instances-from-load-balancer"
+    cmd += " --load-balancer-name " + load_balancer_name
+    cmd += " --instances " + instance_id
+    result = JSON.parse(exec_command(cmd));
+    while check_load_balancer(instance_id)
+        print "."
+        STDOUT.flush
+        sleep 1
+    end
+    puts("deregist")
     return true
 end
 
