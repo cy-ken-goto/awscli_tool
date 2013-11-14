@@ -60,8 +60,11 @@ def create_instance(ami_id, instance_data)
     cmd += " --security-group-ids " + security_group_ids
     cmd += " --instance-type " + instance_data["instance_type"]
     cmd += " --placement AvailabilityZone=" + instance_data["availability_zone"]
-
-    return JSON.parse(exec_command(cmd))
+    cmd += " | jq '.[\"Instances\"][0][\"InstanceId\"]'"
+    cmd += " | sed -e 's/\"//g'"
+    create_instance_id = exec_command(cmd)
+    check_pend(create_instance_id, "running")
+    return create_instance
 end
 
 def check_load_balancer(instance_id)
@@ -179,6 +182,9 @@ def check_pend(id, check_state, time=2)
     current_state = ""
     id_type = id.split("-")
     while current_state != check_state
+        if current_state == "failed"
+            return false
+        end
         print "."
         STDOUT.flush
         if id_type[0] == "i" then
@@ -193,6 +199,7 @@ def check_pend(id, check_state, time=2)
         sleep time
     end
     puts(current_state)
+    return true
 end
 
 # Instance Stateを取得
