@@ -59,10 +59,12 @@ instance_data = get_instance_data(input_instance_id)
 
 # クローン元がロードバランサーに入っているかチェック
 # 入っていた場合外す
+load_balancer_remove_flg = false
 load_balancer_name = check_load_balancer(input_instance_id)
 if load_balancer_name then
     if reboot_flg && deregister_instance_from_load_balancer(load_balancer_name, input_instance_id) then
         puts("指定したInstanceをLoad Balancer(" + load_balancer_name + ")から外しました")
+        load_balancer_remove_flg = true
     end
 end
 
@@ -70,6 +72,15 @@ end
 ami_id = create_image(input_instance_id, reboot_flg)
 puts "AMI作成完了 : " + ami_id
 
+# クローン元をロードバランサーから外した場合戻す
+if load_balancer_remove_flg then
+    if ! register_instance_from_load_balancer(load_balancer_name, input_instance_id) then
+        exit 1
+    end
+    puts input_instance_id + "を" + load_balancer_name + "(elb)に追加しました"
+end
+
 # Instance生成
 instance_id = create_instance(ami_id, instance_data)
 puts "新規Instance生成完了 : " + instance_id
+

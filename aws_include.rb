@@ -86,6 +86,20 @@ def check_load_balancer(instance_id)
     return false
 end
 
+def register_instance_from_load_balancer(load_balancer_name, instance_id)
+    cmd = "aws elb register-instances-with-load-balancer"
+    cmd += " --load-balancer-name " + load_balancer_name
+    cmd += " --instances " + instance_id
+    cmd += " | jq '.[\"Instances\"][]'"
+    cmd += " | jq 'select(contains({InstanceId:" + instance_id + "}))'"
+    cmd += " | jq '.[\"InstanceId\"]'"
+    cmd += " sed -e 's/\"//g'"
+    if exec_command(cmd) != instance_id then
+        return false
+    end
+    return check_pend_load_balancer(load_balancer_name, instance_id)
+end
+
 def deregister_instance_from_load_balancer(load_balancer_name, instance_id)
     cmd = "aws elb deregister-instances-from-load-balancer"
     cmd += " --load-balancer-name " + load_balancer_name
@@ -97,6 +111,30 @@ def deregister_instance_from_load_balancer(load_balancer_name, instance_id)
         sleep 1
     end
     puts("deregist")
+    return true
+end
+
+def check_pend_load_balancer(load_balancer_name, instance_id)
+    cmd = "aws elb describe-instance-health"
+    cmd += " --load-balancer-name " + load_balancer_name
+    cmd += " --instances " + instance_id
+    cmd += " | jq '.[\"InstanceStates\"][0][\"State\"]'"
+    cmd += " sed -e 's/\"//g'"
+    current_state = ""
+    sleep_time = 3
+    now_time = 0
+    limit_time = 300
+    while exec_command(cmd) != "In Service"
+        print "."
+        STDOUT.flush
+        sleep sleep_time
+        now_time = now_time + sleep_time
+        if now_time >= limit_time
+            puts current_state
+            return false
+        end
+    end
+    puts current_state
     return true
 end
 
