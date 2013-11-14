@@ -65,6 +65,9 @@ end
 ami_id = create_image(input_instance_id, reboot_flg)
 puts "AMI作成完了 : " + ami_id
 
-pp create_instance(ami_id, instance_data)
+instance_id = create_instance(ami_id, instance_data)
+puts "新規Instance生成完了 : " + instance_id
+
+
 
 
