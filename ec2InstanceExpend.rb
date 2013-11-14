@@ -81,6 +81,7 @@ if load_balancer_remove_flg then
 end
 
 # Instance生成
-instance_id = create_instance(ami_id, instance_data)
-puts "新規Instance生成完了 : " + instance_id
+new_instance_id = create_instance(ami_id, instance_data)
+puts "新規Instance生成完了 : " + new_instance_id
+
 
