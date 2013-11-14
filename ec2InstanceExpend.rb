@@ -48,13 +48,17 @@ else
     input_instance_id  = input("クローン元のEC2インスタンスのidを入力して下さい : ")
 end
 
+# クローン元を再起動するかチェック
 reboot_flg = true
 if config[:reboot] == "off" then
     reboot_flg = false
 end
 
+# クローン元インスタンス情報取得
 instance_data = get_instance_data(input_instance_id)
 
+# クローン元がロードバランサーに入っているかチェック
+# 入っていた場合外す
 load_balancer_name = check_load_balancer(input_instance_id)
 if load_balancer_name then
     if reboot_flg && deregister_instance_from_load_balancer(load_balancer_name, input_instance_id) then
@@ -62,12 +66,10 @@ if load_balancer_name then
     end
 end
 
+# AMI作成
 ami_id = create_image(input_instance_id, reboot_flg)
 puts "AMI作成完了 : " + ami_id
 
+# Instance生成
 instance_id = create_instance(ami_id, instance_data)
 puts "新規Instance生成完了 : " + instance_id
-
-
-
-
