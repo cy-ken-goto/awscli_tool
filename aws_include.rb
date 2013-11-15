@@ -164,7 +164,7 @@ def register_instance_from_load_balancer(load_balancer_name, instance_id)
     cmd += " | jq '.[\"Instances\"][]'"
     cmd += " | jq 'select(contains({InstanceId:\"" + instance_id + "\"}))'"
     cmd += " | jq '.[\"InstanceId\"]'"
-    cmd += " sed -e 's/\"//g'"
+    cmd += " | sed -e 's/\"//g'"
     if exec_command(cmd) != instance_id then
         return false
     end
