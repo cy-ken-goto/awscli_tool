@@ -19,6 +19,11 @@ OptionParser.new do |opts|
                 "EC2のInstance Idを指定") { 
             |v| config[:instance_id] = v 
         }
+        opts.on('-n name',
+                '--name name',
+                "TagのName要素を指定") {
+            |v| config[:name] = v
+        }
         opts.on('-s size',
                 '--size size',
                 "変更後のEBS容量を指定(GB)") {
@@ -50,6 +55,8 @@ key_flg = false
 root_user_flg = true
 if !config[:instance_id].nil? then
     input_id = config[:instance_id]
+elsif !config[:name].nil? then
+    input_id = get_instance_id(config[:name])
 else
     input_id = input("EC2インスタンスのidを入力して下さい : ")
 end
