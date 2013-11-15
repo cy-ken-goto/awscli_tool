@@ -336,7 +336,7 @@ def aws_system_check_pend(id, time=2)
         end
         sleep time
     end
-    puts "system chk ok"
+    puts "aws system chk ok"
     return true
 end
 
