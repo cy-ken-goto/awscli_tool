@@ -196,7 +196,6 @@ def check_pend_load_balancer(load_balancer_name, instance_id)
     now_time = 0
     limit_time = 300
     while exec_command(cmd, false) != "InService"
-        puts state
         print "."
         STDOUT.flush
         sleep sleep_time
