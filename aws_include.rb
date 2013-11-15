@@ -190,7 +190,7 @@ def check_pend_load_balancer(load_balancer_name, instance_id)
     cmd += " --load-balancer-name " + load_balancer_name
     cmd += " --instances " + instance_id
     cmd += " | jq '.[\"InstanceStates\"][0][\"State\"]'"
-    cmd += " sed -e 's/\"//g'"
+    cmd += " | sed -e 's/\"//g'"
     current_state = ""
     sleep_time = 3
     now_time = 0
