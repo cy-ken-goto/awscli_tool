@@ -26,6 +26,40 @@ def get_instance_id(name)
     return exec_command(cmd)
 end
 
+# クローン元のNameを渡しす。
+# 同じ名付けをしているインスタンスリストを検索し、
+# 数値がもっとも後ろのものに+1して返す
+def get_instanse_tag_new_name(search_base)
+    # 数字は外して検索
+    search_base.gsub!(/\d*/, "")
+
+    cmd = "aws ec2 describe-instances"
+    cmd += " | jq '.[\"Reservations\"][][\"Instances\"][][\"Tags\"][]'"
+    cmd += " | jq 'select(contains({Key:\"Name\"}))'"
+    cmd += " | jq 'select(contains({Value:\"" + search_base + "\"}))'"
+    cmd += " | jq '.[\"Value\"]'"
+    cmd += " | sed -e 's/\"//g'"
+    cmd += " | tr '\\n' ','"
+    result = exec_command(cmd)
+    result = result.chop
+    instance_names = result.split(",")
+
+    # 数字のIDを抽出
+    instance_names_ids = Array.new
+    i = 0
+    while i < instance_names.length
+        id = instance_names[i].gsub(/\D*/, "").to_i
+        instance_names_ids << id
+        i = i + 1
+    end
+
+    # ソートとして最後をカウントアップ
+    instance_names_ids = instance_names_ids.sort
+    new_id = instance_names_ids[-1] + 1
+
+    return search_base + new_id.to_s
+end
+
 # Instance 各データを取得
 def get_instance_data(instance_id)
     result = JSON.parse(exec_command("aws ec2 describe-instances --instance-ids " + instance_id))
@@ -91,7 +125,7 @@ def register_instance_from_load_balancer(load_balancer_name, instance_id)
     cmd += " --load-balancer-name " + load_balancer_name
     cmd += " --instances " + instance_id
     cmd += " | jq '.[\"Instances\"][]'"
-    cmd += " | jq 'select(contains({InstanceId:\"" + instance_id + "\""}))'"
+    cmd += " | jq 'select(contains({InstanceId:\"" + instance_id + "\"}))'"
     cmd += " | jq '.[\"InstanceId\"]'"
     cmd += " sed -e 's/\"//g'"
     if exec_command(cmd) != instance_id then

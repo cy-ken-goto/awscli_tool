@@ -48,6 +48,8 @@ else
     input_instance_id  = input("クローン元のEC2インスタンスのidを入力して下さい : ")
 end
 
+puts get_instanse_tag_new_name(config[:name])
+
 # クローン元を再起動するかチェック
 reboot_flg = true
 if config[:reboot] == "off" then
@@ -83,5 +85,8 @@ end
 # Instance生成
 new_instance_id = create_instance(ami_id, instance_data)
 puts "新規Instance生成完了 : " + new_instance_id
+
+# tag Name付け処理
+
 
 
