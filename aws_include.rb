@@ -117,6 +117,7 @@ def create_instance(ami_id, instance_data, name="")
     cmd += " | sed -e 's/\"//g'"
     create_instance_id = exec_command(cmd)
     check_pend(create_instance_id, "running")
+    aws_system_check_pend(create_instance_id)
     if name != ""
         if ! create_name_tag(create_instance_id, name) then
             return false
@@ -238,6 +239,7 @@ end
 def create_volume(snapshot_id, size, availability_zone)
     result = JSON.parse(exec_command("aws ec2 create-volume --snapshot-id " + snapshot_id + " --size " + size + " --availability-zone " + availability_zone))
     check_pend(result["VolumeId"], "available", 3)
+    aws_system_check_pend(result["VolumeId"])
     return result["VolumeId"]
 end
 
@@ -259,6 +261,7 @@ def start_instance(instance_id)
         puts "instance starting\n"
         result = JSON.parse(exec_command("aws ec2 start-instances --instance-ids " + instance_id))
         check_pend(instance_id, "running")
+        aws_system_check_pend(instance_id)
     end
 end
 
@@ -277,6 +280,7 @@ def reboot_instance(instance_id)
         puts "instance rebooting\n"
         result = JSON.parse(exec_command("aws ec2 reboot-instances --instance-ids " + instance_id))
         check_pend(instance_id, "running")
+        aws_system_check_pend(instance_id)
     end
 end
 
@@ -319,10 +323,37 @@ def check_pend(id, check_state, time=2)
     return true
 end
 
+def aws_system_check_pend(id, time=2)
+    current_state = false
+    id_type = id.split("-")
+    while ! current_state
+        print "."
+        STDOUT.flush
+        if id_type[0] == "i" then
+            current_state = get_instance_system_status(id)
+        elsif id_type[0] == "vol" then
+            current_state = get_volume_system_status(id)
+        end
+        sleep time
+    end
+    puts "system chk ok"
+    return true
+end
+
 # Instance Stateを取得
 def get_instance_state(instance_id)
     result = JSON.parse(exec_command("aws ec2 describe-instances --instance-ids " + instance_id, false))
     return result["Reservations"][0]["Instances"][0]["State"]["Name"]
+end
+
+def get_instance_system_status(instance_id)
+    result = JSON.parse(exec_command("aws ec2 describe-instance-status --instance-ids " + instance_id, false))
+    instance_status = result["InstanceStatuses"][0]["InstanceStatus"]["Status"]
+    system_status = result["InstanceStatuses"][0]["SystemStatus"]["Status"]
+    if instance_status == "ok" && system_status == "ok"
+        return true
+    end
+    return false
 end
 
 # Snapshot Stateを取得
@@ -335,6 +366,15 @@ end
 def get_volume_state(volume_id)
     result = JSON.parse(exec_command("aws ec2 describe-volumes --volume-ids " + volume_id, false))
     return result["Volumes"][0]["State"]
+end
+
+def get_volume_system_status(volume_id)
+    result = JSON.parse(exec_command("aws ec2 describe-volume-status --volume-ids " + volume_id, false))
+    volume_status = result["VolumeStatuses"][0]["VolumeStatus"]["Status"]
+    if volume_status == "ok"
+        return true
+    end
+    return false
 end
 
 # AMI Stateを取得
