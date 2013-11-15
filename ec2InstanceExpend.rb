@@ -7,6 +7,7 @@ require 'optparse'
 # デフォルト値を設定する
 config = {
     :reboot => 'on',
+    :user => 'root',
 }
 
 # 引数を解析する
@@ -29,6 +30,16 @@ OptionParser.new do |opts|
                 "on/off(default on) クローン元を再起動してImageを作成するか決定<offは非推奨>") {
             |v| config[:reboot] = v
         }
+        opts.on('-u user',
+                '--user user',
+                "クローン元へのログインユーザを指定（デフォルト値：#{config[:user]}）※ユーザ指定する場合sudo可能であること") {
+            |v| config[:arg3] = v
+        }
+        opts.on('-k key',
+                '--key key',
+                "クローン元へのログイン鍵を指定（デフォルト値：なし）") {
+            |v| config[:key] = v
+        }
 
         opts.parse!(ARGV)
 
@@ -40,12 +51,22 @@ OptionParser.new do |opts|
     end
 end
 
+key_flg = false
+root_user_flg = true
 if !config[:instance_id].nil? then
     input_instance_id = config[:instance_id]
 elsif !config[:name].nil? then
     input_instance_id = get_instance_id(config[:name])
 else
     input_instance_id  = input("クローン元のEC2インスタンスのidを入力して下さい : ")
+end
+input_user_name = config[:user]
+if input_user_name != "root"
+    root_user_flg = false
+end
+if !config[:key].nil? then
+    key_file = config[:key]
+    key_flg = true
 end
 
 # クローン元を再起動するかチェック
@@ -86,6 +107,8 @@ end
 # Instance生成
 new_instance_id = create_instance(ami_id, instance_data, new_instance_name)
 puts "新規Instance生成完了 : " + new_instance_id
+# 各デーモンの起動を5秒待つ
+sleep(5)
 
 # NewInstance情報表示
 new_instance_data = get_instance_data(new_instance_id)
@@ -96,8 +119,30 @@ puts "private_ip : " + new_instance_data["private_ip"]
 puts "volume_id : " + new_instance_data["volume_id"]
 puts "device_name : " + new_instance_data["device_name"]
 puts "key_name : " + new_instance_data["key_name"]
-puts "security_groups : " + new_instance_data["security_groups"]
+print "security_groups : "
+pp new_instance_data["security_groups"]
 
+# sshコマンドの実行準備
+ssh_str = "ssh -o \"StrictHostKeyChecking no\" "
+if key_flg then
+    ssh_str += "-i " + key_file + " "
+end
+ssh_str += input_user_name + "@" + new_instance_data["private_ip"] + " "
+if !root_user_flg then
+    ssh_str += "sudo "
+end
 
+# host名変更
+cmd = ssh_str + "sed -e \"s/localhost.localdomain\\\|" + instance_data["name"]
+cmd += "/" + new_instance_name + "/g\" /etc/hosts"
+exec_command(cmd);
+cmd = ssh_str + "sed -e \"s/localhost.localdomain\\\|" + instance_data["name"]
+cmd += "/" + new_instance_name + "/g\" /etc/sysconfig/network"
+exec_command(cmd);
+cmd = ssh_str + "hostname " + new_instance_name
+exec_command(cmd);
 
+# NewInstanceリブート
+reboot_instance(new_instance_id)
+puts "Finish!!"
 

@@ -10,13 +10,23 @@ def exec_command(cmd, put_flg=true)
         puts cmd
     end
 
-    stdout = `#{cmd}`
-    ret = $?
+    ret = 1
+    cnt = 0
+    while  ret != 0 && cnt < 3
+        if cnt > 0
+            sleep(3)
+            puts "[Retry " + cnt.to_s + "]"
+        end
+        stdout = `#{cmd}`
+        ret = $?
+        rtn = stdout.gsub(/[\r\n]/,"")
+        cnt = cnt + 1
+    end
     if ret != 0 then
         puts "[failed command] #{cmd}"
         exit(1)
     end
-    return stdout.gsub(/[\r\n]/,"")
+    return rtn
 end
 
 def get_instance_id(name)
@@ -258,6 +268,15 @@ def stop_instance(instance_id)
         puts "instance stopping\n"
         result = JSON.parse(exec_command("aws ec2 stop-instances --instance-ids " + instance_id))
         check_pend(instance_id, "stopped")
+    end
+end
+
+# ec2インスタンスをreboot
+def reboot_instance(instance_id)
+    if get_instance_state(instance_id) == "running" then
+        puts "instance rebooting\n"
+        result = JSON.parse(exec_command("aws ec2 reboot-instances --instance-ids " + instance_id))
+        check_pend(instance_id, "running")
     end
 end
 
