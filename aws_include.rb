@@ -108,7 +108,7 @@ def create_instance(ami_id, instance_data, name="")
     create_instance_id = exec_command(cmd)
     check_pend(create_instance_id, "running")
     if name != ""
-        if create_name_tag(create_instance_id, name) then
+        if ! create_name_tag(create_instance_id, name) then
             return false
         end
     end
