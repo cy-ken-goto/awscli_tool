@@ -145,4 +145,17 @@ exec_command(cmd);
 # NewInstanceリブート
 reboot_instance(new_instance_id)
 puts "Finish!!"
+puts ""
+
+# NewInstance情報表示
+new_instance_data = get_instance_data(new_instance_id)
+puts "name : " + new_instance_data["name"]
+puts "instance_type : " + new_instance_data["instance_type"]
+puts "availability_zone : " + new_instance_data["availability_zone"]
+puts "private_ip : " + new_instance_data["private_ip"]
+puts "volume_id : " + new_instance_data["volume_id"]
+puts "device_name : " + new_instance_data["device_name"]
+puts "key_name : " + new_instance_data["key_name"]
+print "security_groups : "
+pp new_instance_data["security_groups"]
 
