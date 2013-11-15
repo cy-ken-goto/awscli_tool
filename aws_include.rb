@@ -195,14 +195,16 @@ def check_pend_load_balancer(load_balancer_name, instance_id)
     sleep_time = 3
     now_time = 0
     limit_time = 300
-    while exec_command(cmd) != "In Service"
+    while exec_command(cmd, false) != "InService"
+        puts state
         print "."
         STDOUT.flush
         sleep sleep_time
         now_time = now_time + sleep_time
         if now_time >= limit_time
             puts current_state
-            return false
+            puts 'elb追加しましたが、helthチェックが失敗しています。'
+            exit 1
         end
     end
     puts current_state
@@ -304,7 +306,8 @@ def check_pend(id, check_state, time=2)
     id_type = id.split("-")
     while current_state != check_state
         if current_state == "failed"
-            return false
+            puts id + " is " + current_state
+            exit 1
         end
         print "."
         STDOUT.flush
