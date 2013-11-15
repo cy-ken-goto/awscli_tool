@@ -63,6 +63,15 @@ end
 # Instance 各データを取得
 def get_instance_data(instance_id)
     result = JSON.parse(exec_command("aws ec2 describe-instances --instance-ids " + instance_id))
+    tags = result["Reservations"][0]["Instances"][0]["Tags"]
+    name = ""
+    i = 0
+    while  i < tags.length
+        if tags[i]["Key"] == "Name" then
+            name = tags[i]["Value"]
+        end
+        i = i + 1
+    end
     return {
                 "private_ip"=>result["Reservations"][0]["Instances"][0]["PrivateIpAddress"], 
                 "availability_zone"=>result["Reservations"][0]["Instances"][0]["Placement"]["AvailabilityZone"],
@@ -71,7 +80,7 @@ def get_instance_data(instance_id)
                 "key_name"=>result["Reservations"][0]["Instances"][0]["KeyName"],
                 "security_groups"=>result["Reservations"][0]["Instances"][0]["SecurityGroups"],
                 "instance_type"=>result["Reservations"][0]["Instances"][0]["InstanceType"],
-                "availability_zone"=>result["Reservations"][0]["Instances"][0]["Placement"]["AvailabilityZone"],
+                "name"=>name
             }
 end
 
@@ -82,7 +91,7 @@ def get_volume_id(volume_id)
             }
 end
 
-def create_instance(ami_id, instance_data)
+def create_instance(ami_id, instance_data, name="")
     i = 0
     security_group_ids = ""
     while i < instance_data["security_groups"].length
@@ -98,7 +107,24 @@ def create_instance(ami_id, instance_data)
     cmd += " | sed -e 's/\"//g'"
     create_instance_id = exec_command(cmd)
     check_pend(create_instance_id, "running")
-    return create_instance
+    if name != ""
+        if create_name_tag(create_instance_id, name) then
+            return false
+        end
+    end
+    return create_instance_id
+end
+
+def create_name_tag(id, name)
+    cmd = "aws ec2 create-tags"
+    cmd += " --resources " + id
+    cmd += " --tags Key=Name,Value=" + name
+    cmd += " | jq .'[\"return\"]'"
+    cmd += " | sed -e 's/\"//g'"
+    if exec_command(cmd) == "true"
+        return true
+    end
+    return false
 end
 
 def check_load_balancer(instance_id)

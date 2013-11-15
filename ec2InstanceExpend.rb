@@ -48,8 +48,6 @@ else
     input_instance_id  = input("クローン元のEC2インスタンスのidを入力して下さい : ")
 end
 
-puts get_instanse_tag_new_name(config[:name])
-
 # クローン元を再起動するかチェック
 reboot_flg = true
 if config[:reboot] == "off" then
@@ -58,6 +56,9 @@ end
 
 # クローン元インスタンス情報取得
 instance_data = get_instance_data(input_instance_id)
+
+# 新しいインスタンスの名前生成
+new_instance_name = get_instanse_tag_new_name(instance_data["name"])
 
 # クローン元がロードバランサーに入っているかチェック
 # 入っていた場合外す
@@ -83,10 +84,20 @@ if load_balancer_remove_flg then
 end
 
 # Instance生成
-new_instance_id = create_instance(ami_id, instance_data)
+new_instance_id = create_instance(ami_id, instance_data, new_instance_name)
 puts "新規Instance生成完了 : " + new_instance_id
 
-# tag Name付け処理
+# NewInstance情報表示
+new_instance_data = get_instance_data(new_instance_id)
+puts "name : " + new_instance_data["name"]
+puts "instance_type : " + new_instance_data["instance_type"]
+puts "availability_zone : " + new_instance_data["availability_zone"]
+puts "private_ip : " + new_instance_data["private_ip"]
+puts "volume_id : " + new_instance_data["volume_id"]
+puts "device_name : " + new_instance_data["device_name"]
+puts "key_name : " + new_instance_data["key_name"]
+puts "security_groups : " + new_instance_data["security_groups"]
+
 
 
 
