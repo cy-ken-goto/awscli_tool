@@ -41,7 +41,7 @@ gem install json
 
 # 各ダウンロードソース削除
 rm -f ez_setup.py
-rm -f rubygems-1.8.25
+rm -rf rubygems-1.8.25
 rm -f rubygems-1.8.25.tgz
 
 # test実行
