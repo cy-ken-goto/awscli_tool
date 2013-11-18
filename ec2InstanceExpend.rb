@@ -75,8 +75,25 @@ if config[:reboot] == "off" then
     reboot_flg = false
 end
 
+# インスタンスがStop中の場合Startする
+if get_instance_state(input_instance_id) != "running" then
+    start_instance(input_instance_id)
+end
+
 # クローン元インスタンス情報取得
 instance_data = get_instance_data(input_instance_id)
+
+# クローン元のhost名取得
+ssh_str = "ssh -o \"StrictHostKeyChecking no\" "
+if key_flg then
+    ssh_str += "-i " + key_file + " "
+end
+ssh_str += input_user_name + "@" + instance_data["private_ip"] + " "
+if !root_user_flg then
+    ssh_str += "sudo "
+end
+cmd = ssh_str + "grep HOSTNAME /etc/sysconfig/network | sed -e 's/HOSTNAME=//g'"
+host_name = exec_command(cmd);
 
 # 新しいインスタンスの名前生成
 new_instance_name = get_instanse_tag_new_name(instance_data["name"])
@@ -107,20 +124,8 @@ end
 # Instance生成
 new_instance_id = create_instance(ami_id, instance_data, new_instance_name)
 puts "新規Instance生成完了 : " + new_instance_id
-# 各デーモンの起動を5秒待つ
-sleep(5)
 
-# NewInstance情報表示
 new_instance_data = get_instance_data(new_instance_id)
-puts "name : " + new_instance_data["name"]
-puts "instance_type : " + new_instance_data["instance_type"]
-puts "availability_zone : " + new_instance_data["availability_zone"]
-puts "private_ip : " + new_instance_data["private_ip"]
-puts "volume_id : " + new_instance_data["volume_id"]
-puts "device_name : " + new_instance_data["device_name"]
-puts "key_name : " + new_instance_data["key_name"]
-print "security_groups : "
-pp new_instance_data["security_groups"]
 
 # sshコマンドの実行準備
 ssh_str = "ssh -o \"StrictHostKeyChecking no\" "
@@ -133,11 +138,9 @@ if !root_user_flg then
 end
 
 # host名変更
-cmd = ssh_str + "sed -e \"s/localhost.localdomain\\\|" + instance_data["name"]
-cmd += "/" + new_instance_name + "/g\" /etc/hosts"
+cmd = ssh_str + "sed -e \"s/" + host_name + "/" + new_instance_name + "/g\" /etc/hosts"
 exec_command(cmd);
-cmd = ssh_str + "sed -e \"s/localhost.localdomain\\\|" + instance_data["name"]
-cmd += "/" + new_instance_name + "/g\" /etc/sysconfig/network"
+cmd = ssh_str + "sed -e \"s/" + host_name + "/" + new_instance_name + "/g\" /etc/sysconfig/network"
 exec_command(cmd);
 cmd = ssh_str + "hostname " + new_instance_name
 exec_command(cmd);
