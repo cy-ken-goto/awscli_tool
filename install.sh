@@ -7,13 +7,17 @@ read ACCESS_KEY
 echo -n "input region > "
 read REASION
 
+$KEY_ID =~ s/[\r\n]//g;
+$ACCESS_KEY =~ s/[\r\n]//g;
+$REASION =~ s/[\r\n]//g;
+
 wget http://peak.telecommunity.com/dist/ez_setup.py
 python ez_setup.py
 easy_install pip
 pip install awscli
 mkdir ~/.aws
 touch ~/.aws/config
-printf "[default]\n" >> ~/.aws/config
+printf "[default]\n" > ~/.aws/config
 printf "aws_access_key_id = %s\n"$KEY_ID >> ~/.aws/config
 printf "aws_secret_access_key = %s\n"$ACCESS_KEY >> ~/.aws/config
 printf "region = %s\n"$REASION >> ~/.aws/config
@@ -35,3 +39,6 @@ gem -v
 
 # rubyライブラリインストール
 gem install json
+
+# test実行
+aws ec2 describe-instances
