@@ -42,3 +42,5 @@ gem install json
 
 # test実行
 aws ec2 describe-instances
+
+echo 'Finish!'
