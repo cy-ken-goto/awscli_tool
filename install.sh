@@ -18,9 +18,9 @@ pip install awscli
 mkdir ~/.aws
 touch ~/.aws/config
 echo '[default]' > ~/.aws/config
-echo 'aws_access_key_id = %s'$KEY_ID >> ~/.aws/config
-echo 'aws_secret_access_key = %s'$ACCESS_KEY >> ~/.aws/config
-echo 'region = %s'$REASION >> ~/.aws/config
+echo 'aws_access_key_id = '$KEY_ID >> ~/.aws/config
+echo 'aws_secret_access_key = '$ACCESS_KEY >> ~/.aws/config
+echo 'region = '$REASION >> ~/.aws/config
 aws ec2 describe-instances --dry-run
 
 # jq インストール
