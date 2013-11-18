@@ -26,8 +26,8 @@ aws ec2 describe-instances --dry-run
 yum install -y jq
 
 # rubyインストール
-yum check-update
-yum update -y
+#yum check-update
+#yum update -y
 yum install -y ruby ruby-devel ruby-docs
 ruby -v
 
