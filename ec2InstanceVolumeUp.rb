@@ -104,7 +104,7 @@ end
 exec_command(ssh_str + "touch ssh_chk.txt");
 
 # dfコマンドで対象サーバのルートデバイスを取得
-device_pos = exec_command(ssh_str + "df -x tmpfs | grep / | cut -d' ' -f1")
+device_pos = exec_command(ssh_str + "df / | grep / | cut -d' ' -f1")
 
 # Instanceストップ
 stop_instance(input_id)
