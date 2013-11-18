@@ -33,12 +33,16 @@ ruby -v
 # gemsインストール
 wget http://rubyforge.org/frs/download.php/76729/rubygems-1.8.25.tgz
 tar zxvf rubygems-1.8.25.tgz
-cd rubygems-1.8.25
-ruby setup.rb
+ruby ./rubygems-1.8.25/setup.rb
 gem -v
 
 # rubyライブラリインストール
 gem install json
+
+# 各ダウンロードソース削除
+rm -f ez_setup.py
+rm -f rubygems-1.8.25
+rm -f rubygems-1.8.25.tgz
 
 # test実行
 aws ec2 describe-instances
