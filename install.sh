@@ -14,20 +14,15 @@ pip install awscli
 mkdir ~/.aws
 touch ~/.aws/config
 printf "[default]\n" >> ~/.aws/config
-#printf "aws_access_key_id = AKIAJSG6AJ3H6KPTXMFQ\r\n" >> ~/.aws/config
-#printf "aws_secret_access_key = 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\r\n" >> ~/.aws/config
-#printf "region = ap-northeast-1\r\n" >> ~/.aws/config
-printf "aws_access_key_id = %03d\n"$KEY_ID >> ~/.aws/config
-printf "aws_secret_access_key = %03d\n"$ACCESS_KEY >> ~/.aws/config
-printf "region = %03d\n"$REASION >> ~/.aws/config
+printf "aws_access_key_id = %s\n"$KEY_ID >> ~/.aws/config
+printf "aws_secret_access_key = %s\n"$ACCESS_KEY >> ~/.aws/config
+printf "region = %s\n"$REASION >> ~/.aws/config
 aws ec2 describe-instances --dry-run
 
 # jq インストール
 yum install -y jq
 
 # rubyインストール
-#yum check-update
-#yum update -y
 yum install -y ruby ruby-devel ruby-docs
 ruby -v
 
