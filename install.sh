@@ -17,10 +17,10 @@ easy_install pip
 pip install awscli
 mkdir ~/.aws
 touch ~/.aws/config
-printf '[default]\n' > ~/.aws/config
-printf 'aws_access_key_id = %s\n'$KEY_ID >> ~/.aws/config
-printf 'aws_secret_access_key = %s\n'$ACCESS_KEY >> ~/.aws/config
-printf 'region = %s\n'$REASION >> ~/.aws/config
+printf '[default]' > ~/.aws/config
+printf 'aws_access_key_id = %s'$KEY_ID >> ~/.aws/config
+printf 'aws_secret_access_key = %s'$ACCESS_KEY >> ~/.aws/config
+printf 'region = %s'$REASION >> ~/.aws/config
 aws ec2 describe-instances --dry-run
 
 # jq インストール
